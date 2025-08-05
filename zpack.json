@@ -1,7 +1,7 @@
 {
   "$schema": "https://github.com/glzr-io/zebar/raw/v3.0.0/resources/zpack-schema.json",
   "name": "zebar-rose-pine-pp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A fully featured topbar derived from the Rosé Pine theme",
   "tags": [
     "topbar",
@@ -9,7 +9,8 @@
     "rose-pine"
   ],
   "previewImages": [
-    "./resources/preview-image-1.png"
+    "./resources/preview-image-1.png",
+    "./resources/preview-image-2.png"
   ],
   "repositoryUrl": "https://github.com/m4rshe1/zebar-rose-pine-pp",
   "widgets": [
@@ -22,9 +23,9 @@
       "resizable": true,
       "transparent": true,
       "includeFiles": [
-        "*.html",
-        "*.css",
-        "*.js"
+        "dist/glazewm/*.html",
+        "dist/glazewm/*.css",
+        "dist/glazewm/*.js"
       ],
       "caching": {
         "defaultDuration": 604800,
@@ -61,9 +62,9 @@
       "resizable": true,
       "transparent": true,
       "includeFiles": [
-        "*.html",
-        "*.css",
-        "*.js"
+        "dist/komorebi/*.html",
+        "dist/komorebi/*.css",
+        "dist/komorebi/*.js"
       ],
       "caching": {
         "defaultDuration": 604800,
@@ -100,9 +101,9 @@
       "resizable": true,
       "transparent": true,
       "includeFiles": [
-        "*.html",
-        "*.css",
-        "*.js"
+        "dist/vanilla/*.html",
+        "dist/vanilla/*.css",
+        "dist/vanilla/*.js"
       ],
       "caching": {
         "defaultDuration": 604800,
