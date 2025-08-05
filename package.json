@@ -6,7 +6,7 @@
     "build:glazewm": "vite build --mode glazewm",
     "build:komorebi": "vite build --mode komorebi",
     "build:vanilla": "vite build --mode vanilla",
-    "build:all": "vite build --mode glazewm && vite build --mode komorebi && vite build --mode vanilla",
+    "build": "vite build --mode glazewm && vite build --mode komorebi && vite build --mode vanilla",
     "dev:glazewm": "vite build --watch --mode glazewm",
     "dev:komorebi": "vite build --watch --mode komorebi",
     "dev:vanilla": "vite build --watch --mode vanilla",
