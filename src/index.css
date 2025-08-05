@@ -1,0 +1,134 @@
+@import "tailwindcss";
+
+@import "https://www.nerdfonts.com/assets/css/webfont.css";
+@import "https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css";
+
+:root {
+  --rp-base: #191724;
+  --rp-base-alpha-bg: #191724;
+  --rp-surface: #1f1d2e;
+  --rp-overlay: #26233a;
+  --rp-muted: #6e6a86;
+  --rp-subtle: #908caa;
+  --rp-text: #e0def4;
+  --rp-love: #eb6f92;
+  --rp-gold: #f6c177;
+  --rp-rose: #ebbcba;
+  --rp-pine: #31748f;
+  --rp-foam: #9ccfd8;
+  --rp-iris: #c4a7e7;
+  --rp-highlight-low: #21202e;
+  --rp-highlight-med: #403d52;
+  --rp-highlight-high: #524f67;
+
+  --rp-moon-base: #232136;
+  --rp-moon-base-alpha-bg: #232136;
+  --rp-moon-surface: #2a273f;
+  --rp-moon-overlay: #393552;
+  --rp-moon-muted: #6e6a86;
+  --rp-moon-subtle: #908caa;
+  --rp-moon-text: #e0def4;
+  --rp-moon-love: #eb6f92;
+  --rp-moon-gold: #f6c177;
+  --rp-moon-rose: #ea9a97;
+  --rp-moon-pine: #3e8fb0;
+  --rp-moon-foam: #9ccfd8;
+  --rp-moon-iris: #c4a7e7;
+  --rp-moon-highlight-low: #2a283e;
+  --rp-moon-highlight-med: #44415a;
+  --rp-moon-highlight-high: #56526e;
+
+  --rp-dawn-base: #faf4ed;
+  --rp-dawn-base-alpha-bg: #faf4ed
+  --rp-dawn-surface: #fffaf3;
+  --rp-dawn-overlay: #f2e9e1;
+  --rp-dawn-muted: #9893a5;
+  --rp-dawn-subtle: #797593;
+  --rp-dawn-text: #575279;
+  --rp-dawn-love: #b4637a;
+  --rp-dawn-gold: #ea9d34;
+  --rp-dawn-rose: #d7827e;
+  --rp-dawn-pine: #286983;
+  --rp-dawn-foam: #56949f;
+  --rp-dawn-iris: #907aa9;
+  --rp-dawn-highlight-low: #f4ede8;
+  --rp-dawn-highlight-med: #dfdad9;
+  --rp-dawn-highlight-high: #cecacd;
+
+  --text: var(--rp-text);
+  --bg: var(--rp-base-alpha-bg);
+  --border: var(--rp-base);
+  --icon: var(--rp-love);
+  --memory: var(--rp-gold);
+  --cpu: var(--rp-rose);
+  --cpu-high-usage: var(--rp-love);
+  --battery: var(--rp-foam);
+  --battery-good: var(--rp-foam);
+  --battery-mid: var(--rp-gold);
+  --battery-low: var(--rp-love);
+  --media: var(--rp-iris);
+  --ws-1: var(--rp-love);
+  --ws-2: var(--rp-gold);
+  --ws-3: var(--rp-rose);
+  --ws-4: var(--rp-pine);
+  --ws-5: var(--rp-foam);
+  --ws-6: var(--rp-iris);
+  --ws-7: var(--rp-love);
+  --ws-8: var(--rp-gold);
+  --ws-9: var(--rp-rose);
+  --weather: var(--rp-foam);
+}
+
+@theme {
+  --animate-flash: flash 1s infinite;
+  @keyframes flash {
+      from { opacity: 1.0; }
+      50% { opacity: 0.5; }
+      to { opacity: 1.0; }
+  }
+
+  
+  --animate-charging: battery-charge 2.1s ease-in-out infinite;
+  --battery-percent: var(--tw-battery-width, 0%);
+  @keyframes battery-charge {
+    0% {
+      width: var(--tw-battery-width);
+    }
+    10% {
+      width: var(--tw-battery-width);
+    }
+    60% {
+      width: 100%;
+    }
+    99% {
+      width: 100%;
+    }
+    100% {
+      width: var(--tw-battery-width);
+    }
+  }
+}
+
+
+body {
+  font-family: "SF Mono", ui-monospace, monospace;
+  font-size: 12px;
+  font-weight: 600;
+  overflow: hidden;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+.systray-icon {
+  width: 16px;
+  height: 16px;
+  margin-right: 4px;
+}
+
+button {
+  cursor: pointer;
+}

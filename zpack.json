@@ -1,0 +1,56 @@
+{
+  "$schema": "https://github.com/glzr-io/zebar/raw/v3.0.0/resources/zpack-schema.json",
+  "name": "zebar-rose-pine-pp",
+  "version": "0.0.0",
+  "description": "A advanced widget pack derived from the Rose Pine theme",
+  "tags": [
+    "topbar",
+    "glazewm",
+    "rose-pine"
+  ],
+  "previewImages": [
+    "./resources/preview-image-1.png"
+  ],
+  "repositoryUrl": "https://github.com/m4rshe1/zebar-rose-pine-pp",
+  "widgets": [
+    {
+      "name": "glazewm",
+      "htmlPath": "./dist/index.html",
+      "zOrder": "normal",
+      "shownInTaskbar": false,
+      "focused": false,
+      "resizable": true,
+      "transparent": true,
+      "includeFiles": [
+        "*.html",
+        "*.css",
+        "*.js"
+      ],
+      "caching": {
+        "defaultDuration": 604800,
+        "rules": []
+      },
+      "privileges": {
+        "shellCommands": []
+      },
+      "presets": [
+        {
+          "name": "default",
+          "anchor": "top_left",
+          "offsetX": "0px",
+          "offsetY": "0px",
+          "width": "100%",
+          "height": "48px",
+          "monitorSelection": {
+            "type": "all"
+          },
+          "dockToEdge": {
+            "enabled": false,
+            "edge": null,
+            "windowMargin": "0px"
+          }
+        }
+      ]
+    }
+  ]
+}
