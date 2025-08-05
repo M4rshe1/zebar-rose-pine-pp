@@ -77,7 +77,7 @@ function Battery(props: { battery: zebar.BatteryOutput }) {
           }}
         ></div>
       </div>
-      <span class="transition-all translate-y-6 duration-300 opacity-0 group-hover:opacity-100 group-hover:translate-y-0 absolute left-12 text-lg">
+      <span class="transition-all -translate-y-6 duration-300 opacity-0 group-hover:opacity-100 group-hover:translate-y-0 absolute left-12 text-base">
         {props.battery.chargePercent.toFixed(0)}%
       </span>
     </div>

@@ -1,10 +1,15 @@
 {
   "name": "zebar-rose-pine-pp",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "",
   "scripts": {
-    "build": "vite build",
-    "dev": "vite build --watch",
+    "build:glazewm": "vite build --mode glazewm",
+    "build:komorebi": "vite build --mode komorebi",
+    "build:vanilla": "vite build --mode vanilla",
+    "build:all": "vite build --mode glazewm && vite build --mode komorebi && vite build --mode vanilla",
+    "dev:glazewm": "vite build --watch --mode glazewm",
+    "dev:komorebi": "vite build --watch --mode komorebi",
+    "dev:vanilla": "vite build --watch --mode vanilla",
     "devcopy": "cmd /c devcopy.bat"
   },
   "dependencies": {
@@ -20,6 +25,7 @@
     "zebar": "^3.0.0"
   },
   "devDependencies": {
+    "@types/node": "^24.2.0",
     "typescript": "5.3.3",
     "vite": "^6.3.5",
     "vite-plugin-solid": "^2.11.8"

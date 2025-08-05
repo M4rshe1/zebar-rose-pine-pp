@@ -1,17 +1,17 @@
 import * as zebar from "zebar";
 import { cn } from "../../utils";
 import Background from "./background";
-import { For } from "solid-js";
+import { Accessor, For } from "solid-js";
 
-function Glazewm(props: { glazewm: zebar.GlazeWmOutput }) {
+function Komorebi(props: { komorebi: zebar.KomorebiOutput }) {
   return (
     <Background align="center">
-      <For each={props.glazewm.currentWorkspaces}>
-        {(workspace: zebar.GlazeWmOutput["currentWorkspaces"][number]) => (
+      <For each={props.komorebi.allWorkspaces}>
+        {(
+          workspace: zebar.KomorebiOutput["allWorkspaces"][number],
+          idx: Accessor<number>
+        ) => (
           <button
-            onClick={() =>
-              props.glazewm.runCommand(`focus --workspace ${workspace.name}`)
-            }
             class={cn(
               "flex items-center justify-center rounded-full p-1 group",
               {
@@ -24,12 +24,11 @@ function Glazewm(props: { glazewm: zebar.GlazeWmOutput }) {
                 "bg-[var(--ws-7)]/10": workspace.name === "7",
                 "bg-[var(--ws-8)]/10": workspace.name === "8",
                 "bg-[var(--ws-9)]/10": workspace.name === "9",
-                focused: workspace.hasFocus,
+                focused: workspace.focusedContainerIndex === idx(),
               }
             )}
           >
             <div
-              id={workspace.name}
               class={cn(
                 "flex items-center justify-center p-0.5 text-base w-6 h-6 rounded-full border-3 bg-transparent font-extrabold",
                 {
@@ -51,11 +50,12 @@ function Glazewm(props: { glazewm: zebar.GlazeWmOutput }) {
                     workspace.name === "8",
                   "text-[var(--ws-9)] border-[var(--ws-9)] group-[.focused]:bg-[var(--ws-9)]":
                     workspace.name === "9",
-                  "text-[var(--rp-base)]": workspace.hasFocus,
+                  "text-[var(--rp-base)]":
+                    workspace.focusedContainerIndex === idx(),
                 }
               )}
             >
-              {workspace.displayName ?? workspace.name}
+              {workspace.name}
             </div>
           </button>
         )}
@@ -64,4 +64,4 @@ function Glazewm(props: { glazewm: zebar.GlazeWmOutput }) {
   );
 }
 
-export default Glazewm;
+export default Komorebi;

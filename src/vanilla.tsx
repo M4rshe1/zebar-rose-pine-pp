@@ -11,14 +11,14 @@ import Cpu from "./components/bar/cpu";
 import Battery from "./components/bar/battery";
 import Media from "./components/bar/media";
 import Datetime from "./components/bar/datetime";
+import Network from "./components/bar/network";
 
 const providers = zebar.createProviderGroup({
   cpu: { type: "cpu" },
   battery: { type: "battery" },
   memory: { type: "memory" },
-  glazewm: { type: "glazewm" },
-  media: { type: "media", refreshInterval: 1000 },
-  date: { type: "date" },
+  media: { type: "media" },
+  network: { type: "network" },
   systray: { type: "systray" },
 });
 
@@ -29,22 +29,19 @@ function App() {
 
   providers.onOutput((outputMap) => setOutput(outputMap));
   return (
-    <div class="grid grid-cols-3 gap-2 pt-[4px]">
+    <div class="grid grid-cols-[1fr_auto_1fr] gap-2 pt-[4px]">
       <Background align="left">
-        {output.glazewm && (
-          <Direction
-            direction={output.glazewm?.tilingDirection}
-            runCommand={output.glazewm?.runCommand}
-          />
-        )}
+        <Direction direction={"horizontal"} />
         {output.memory && <Memory memory={output.memory} />}
         {output.cpu && <Cpu cpu={output.cpu} />}
         {output.battery && <Battery battery={output.battery} />}
       </Background>
-      {output.glazewm && <Glazewm glazewm={output.glazewm} />}
+      <Background align="center">
+        <Datetime noIcon />
+      </Background>
       <Background align="right">
         {output.media && <Media media={output.media} />}
-        {output.date && <Datetime datetime={output.date} />}
+        {output.network && <Network network={output.network} />}
       </Background>
       {/* {output.systray && (
         <div class="flex flex-row gap-2">

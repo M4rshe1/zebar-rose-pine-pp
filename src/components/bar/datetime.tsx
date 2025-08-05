@@ -1,33 +1,68 @@
 import * as zebar from "zebar";
 import { cn } from "../../utils";
+import { createSignal, createEffect, onCleanup } from "solid-js";
 
-function Datetime(props: { datetime: zebar.DateOutput }) {
-  // Format time as HH:mm:ss
-  const timeString = props.datetime.new.toLocaleTimeString("en-US", {
-    hour12: false,
+function Datetime(props: { noIcon?: boolean }) {
+  const [now, setNow] = createSignal(new Date());
+
+  createEffect(() => {
+    const interval = setInterval(() => {
+      setNow(new Date());
+    }, 1000);
+    onCleanup(() => clearInterval(interval));
   });
-  // Format date as e.g. "Mon, 1. Jan 2024"
-  const dateString = props.datetime.new.toLocaleDateString("en-US", {
-    weekday: "short",
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
+
+  const timeString = () =>
+    now().toLocaleTimeString(undefined, {
+      hour12: false,
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+
+  const dateString = () =>
+    now().toLocaleDateString(undefined, {
+      weekday: "short",
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
 
   return (
     <div
       class={cn(
-        "h-8 flex group items-center justify-center overflow-hidden gap-2 text-[var(--memory)] bg-[var(--memory)]/10 rounded-full pr-3 pl-4 relative"
+        "h-8 flex group items-center transition-all duration-300 justify-center overflow-hidden gap-2 text-[var(--memory)] bg-[var(--memory)]/10 rounded-full pr-3 pl-4 relative"
       )}
+      style={{
+        width: `calc(${timeString().length}ch + 4rem)`,
+        "--datetime-date-width": `calc(${dateString().length}ch + 0.5rem)`,
+        "--datetime-time-width": `calc(${timeString().length}ch + 0.5rem)`,
+      }}
     >
-      <i class="ti ti-clock text-lg w-fit"></i>
-      <div class="w-fit rounded-full text-md relative overflow-hidden group-hover:translate-y-6 group-hover:opacity-0 transition-all duration-300">
-        {timeString}
+      {!props.noIcon && (
+        <>
+          <i class="ti ti-clock text-lg group-hover:hidden"></i>
+          <i class="ti ti-calendar text-lg group-hover:block hidden"></i>
+        </>
+      )}
+      <div
+        class="rounded-full text-base relative group-hover:absolute overflow-hidden group-hover:opacity-0 transition-all duration-300"
+        style={{
+          width: "var(--datetime-time-width)",
+        }}
+      >
+        {timeString()}
       </div>
 
-      <span class="transition-all duration-300 absolute left-12 text-lg opacity-0 translate-y-6 group-hover:opacity-100 group-hover:translate-y-0">
-        {dateString}
+      <span class="transition-all duration-300 absolute group-hover:relative text-base opacity-0 group-hover:opacity-100 whitespace-nowrap">
+        {dateString()}
       </span>
+      <style>
+        {`
+          .group:hover {
+            width: calc(var(--datetime-date-width) + 5rem) !important;
+          }
+        `}
+      </style>
     </div>
   );
 }

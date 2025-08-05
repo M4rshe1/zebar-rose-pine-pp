@@ -17,7 +17,7 @@ function Cpu(props: { cpu: zebar.CpuOutput }) {
           }}
         ></div>
       </div>
-      <span class="transition-all translate-y-6 duration-300 opacity-0 group-hover:opacity-100 group-hover:translate-y-0 absolute left-13 text-lg">
+      <span class="transition-all -translate-y-6 duration-300 opacity-0 group-hover:opacity-100 group-hover:translate-y-0 absolute left-13 text-base">
         {props.cpu.usage.toFixed(0)}%
       </span>
     </div>
