@@ -22,9 +22,10 @@ function Datetime(props: { noIcon?: boolean }) {
       hour12: false,
       hour: "2-digit",
     });
-    const minute = date.toLocaleTimeString(undefined, { minute: "2-digit" });
+    let minute = date.getMinutes();
+    const minuteStr = minute < 10 ? `0${minute}` : `${minute}`;
 
-    return `${weekday} ${day} ${month} ${hour}:${minute}`;
+    return `${weekday} ${day} ${month} ${hour}:${minuteStr}`;
   }
 
   return (
