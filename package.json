@@ -9,7 +9,7 @@
     "build": "vite build --mode glazewm && vite build --mode komorebi && vite build --mode vanilla",
     "dev:glazewm": "vite build --watch --mode glazewm",
     "dev:komorebi": "vite build --watch --mode komorebi",
-    "dev:vanilla": "vite build --watch --mode vanilla",
+    "dev:vanilla": "vite build --watch --mode vanilla"
   },
   "dependencies": {
     "@tailwindcss/postcss": "^4.1.11",
