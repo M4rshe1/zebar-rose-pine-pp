@@ -1,5 +1,6 @@
 import * as zebar from "zebar";
 import { cn } from "../../utils";
+import { Match, Switch } from "solid-js";
 
 function Media(props: { media: zebar.MediaOutput | undefined }) {
   return (
@@ -8,7 +9,14 @@ function Media(props: { media: zebar.MediaOutput | undefined }) {
         "h-8 flex group items-center justify-center overflow-hidden gap-2 text-[var(--media)] bg-[var(--media)]/10 rounded-full pr-3 pl-4 relative"
       )}
     >
-      <i class="nf nf-cod-music text-lg"></i>
+      <Switch>
+        <Match when={props.media?.currentSession.isPlaying}>
+          <i class="nf nf-md-music text-lg"></i>
+        </Match>
+        <Match when={!props.media?.currentSession.isPlaying}>
+          <i class="nf nf-md-music_off text-lg"></i>
+        </Match>
+      </Switch>
       <div class="flex items-center gap-2 group-hover:translate-y-6 group-hover:opacity-0 transition-all duration-300">
         <div class="flex items-center gap-1">
           <span class="text-sm">{props.media?.currentSession.artist}</span>
