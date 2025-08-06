@@ -10,7 +10,7 @@
     "dev:glazewm": "vite build --watch --mode glazewm",
     "dev:komorebi": "vite build --watch --mode komorebi",
     "dev:vanilla": "vite build --watch --mode vanilla",
-    "publish": "npx tsx new-version.ts"
+    "publish": "npm run build && npx tsx new-version.ts"
   },
   "dependencies": {
     "@tailwindcss/postcss": "^4.1.11",
