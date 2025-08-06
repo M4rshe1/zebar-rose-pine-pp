@@ -66,8 +66,7 @@ npm run build
 ```
 
 4. **Install in Zebar**
-   - Copy the `zpack.json` file to your Zebar packs directory
-   - Or use the development copy script: `npm run devcopy`
+   - Copy the files to your Zebar packs directory
 
 ### Available Scripts
 
