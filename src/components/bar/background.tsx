@@ -3,9 +3,11 @@ import { cn } from "../../utils";
 const Background = ({
   children,
   align = "center",
+  corners = ["top-left", "top-right", "bottom-left", "bottom-right"],
 }: {
   children;
   align?: "left" | "center" | "right";
+  corners?: ("top-left" | "top-right" | "bottom-left" | "bottom-right")[];
 }) => {
   return (
     <div
@@ -17,7 +19,11 @@ const Background = ({
     >
       <div
         class={cn(
-          "h-10 flex gap-1 items-center bg-[var(--bg)] border border-[var(--border)] rounded-full w-fit font-extrabold px-1"
+          "h-10 flex gap-1 items-center bg-[var(--bg)] border border-[var(--border)] w-fit font-extrabold px-1",
+          corners.includes("top-left") && "rounded-tl-full",
+          corners.includes("top-right") && "rounded-tr-full",
+          corners.includes("bottom-left") && "rounded-bl-full",
+          corners.includes("bottom-right") && "rounded-br-full"
         )}
       >
         {children}

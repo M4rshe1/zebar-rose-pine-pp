@@ -30,7 +30,7 @@ function App() {
 
   providers.onOutput((outputMap) => setOutput(outputMap));
   return (
-    <div class="grid grid-cols-[1fr_auto_1fr] gap-2 pt-[4px]">
+    <div class="grid grid-cols-[1fr_auto_1fr] gap-2 pt-1 px-1">
       <Background align="left">
         {output.glazewm && (
           <Direction
