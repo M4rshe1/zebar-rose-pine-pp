@@ -35,8 +35,6 @@ async function main() {
     `Enter the new version tag (current: ${currentVersion}): `
   );
 
-  execSync("git add -A", { stdio: "inherit" });
-
   const COMMIT_MSG = await prompt("Enter git commit message: ");
 
   const versionValue = NEW_VERSION.startsWith("v")
@@ -45,6 +43,8 @@ async function main() {
 
   zpack.version = versionValue;
   writeJsonFileSync("./zpack.json", zpack);
+
+  execSync("git add -A", { stdio: "inherit" });
 
   if (!COMMIT_MSG || !COMMIT_MSG.trim()) {
     execSync(`git commit -m "New version ${versionValue}"`, {
