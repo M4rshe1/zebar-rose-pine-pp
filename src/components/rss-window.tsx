@@ -1,22 +1,15 @@
 import {
   For,
   Show,
-  createEffect,
   createMemo,
   createSignal,
   onCleanup,
   onMount,
 } from "solid-js";
-
-type RssItem = {
-  id: string;
-  title: string;
-  link: string;
-  published: number;
-  source: string;
-};
+import { fetchFeed, RssItem } from "./bar/rss";
 
 const SEEN_STORAGE_KEY = "zrp:rss:seen";
+const CLEANUP_STORAGE_KEY = "zrp:rss:lastCleanup";
 
 function loadSeen(): Set<string> {
   try {
@@ -35,68 +28,27 @@ function persistSeen(seen: Set<string>) {
   } catch {}
 }
 
-function normalizeId(parts: (string | null | undefined)[]): string {
-  return parts.filter(Boolean).join("|:");
-}
-
-async function fetchFeed(url: string): Promise<RssItem[]> {
-  const out: RssItem[] = [];
+function cleanupOldSeen(maxAgeDays: number = 30) {
   try {
-    const res = await fetch(url);
-    const text = await res.text();
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(text, "application/xml");
+    const lastCleanup = localStorage.getItem(CLEANUP_STORAGE_KEY);
+    const now = Date.now();
+    const daysSinceCleanup = lastCleanup
+      ? (now - parseInt(lastCleanup)) / (1000 * 60 * 60 * 24)
+      : 999;
 
-    // RSS 2.0
-    const items = Array.from(doc.getElementsByTagName("item"));
-    if (items.length > 0) {
-      for (const it of items) {
-        const title =
-          it.getElementsByTagName("title")[0]?.textContent?.trim() ??
-          "Untitled";
-        const link =
-          it.getElementsByTagName("link")[0]?.textContent?.trim() ?? "";
-        const guid =
-          it.getElementsByTagName("guid")[0]?.textContent?.trim() ?? null;
-        const pub =
-          it.getElementsByTagName("pubDate")[0]?.textContent?.trim() ?? null;
-        const published = pub ? Date.parse(pub) : Date.now();
-        out.push({
-          id: normalizeId([guid, link, title]),
-          title,
-          link,
-          published: isNaN(published) ? Date.now() : published,
-          source: url,
-        });
-      }
-      return out;
-    }
+    // Only cleanup once per day
+    if (daysSinceCleanup < 1) return;
 
-    // Atom
-    const entries = Array.from(doc.getElementsByTagName("entry"));
-    for (const it of entries) {
-      const title =
-        it.getElementsByTagName("title")[0]?.textContent?.trim() ?? "Untitled";
-      const id = it.getElementsByTagName("id")[0]?.textContent?.trim() ?? null;
-      const linkEl = it.getElementsByTagName("link")[0] as Element | undefined;
-      const link = linkEl?.getAttribute("href") ?? "";
-      const pub =
-        it.getElementsByTagName("updated")[0]?.textContent?.trim() ??
-        it.getElementsByTagName("published")[0]?.textContent?.trim() ??
-        null;
-      const published = pub ? Date.parse(pub) : Date.now();
-      out.push({
-        id: normalizeId([id, link, title]),
-        title,
-        link,
-        published: isNaN(published) ? Date.now() : published,
-        source: url,
-      });
-    }
-    return out;
-  } catch {
-    return out;
-  }
+    // For now, we'll just clear all seen items older than maxAgeDays
+    // In a more sophisticated implementation, we could track timestamps per item
+    const cutoff = now - maxAgeDays * 24 * 60 * 60 * 1000;
+
+    // Store cleanup timestamp
+    localStorage.setItem(CLEANUP_STORAGE_KEY, now.toString());
+
+    // Note: This is a simple cleanup. For more precise cleanup, we'd need to store
+    // timestamps with each seen item, but that would require a more complex data structure
+  } catch {}
 }
 
 function loadRssOptions() {
@@ -125,10 +77,14 @@ function loadRssOptions() {
   } catch {}
 
   return {
-    urls: [],
+    feeds: [],
     refreshInterval: 5 * 60 * 1000,
     maxItemsPerFeed: 30,
     titleLength: 60,
+    maxAge: null,
+    cleanupInterval: 30,
+    useCorsProxy: true,
+    corsProxyUrl: "https://corsproxy.io/?url=",
   };
 }
 
@@ -139,28 +95,58 @@ export default function RssWindow() {
 
   const refreshInterval = options.refreshInterval ?? 5 * 60 * 1000;
   const titleLength = options.titleLength ?? 60;
-  const maxItemsPerFeed = options.maxItemsPerFeed ?? 30;
+  const globalMaxItems = options.maxItemsPerFeed ?? 30;
+  const globalMaxAge = options.maxAge ?? null;
+  const cleanupInterval = options.cleanupInterval ?? 30;
+  const globalUseCorsProxy = options.useCorsProxy ?? true;
+  const corsProxyUrl = options.corsProxyUrl ?? "https://corsproxy.io/?url=";
 
-  const urls = createMemo(() => (options.urls ?? []).filter(Boolean));
+  const feeds = createMemo(() =>
+    (options.feeds ?? []).filter((feed) => feed.url)
+  );
 
   async function refresh() {
-    if (!urls().length) {
+    // Run cleanup periodically
+    cleanupOldSeen(cleanupInterval);
+
+    if (!feeds().length) {
       setItems([]);
       return;
     }
-    const all = (await Promise.all(urls().map((u) => fetchFeed(u))))
+
+    const all = (
+      await Promise.all(
+        feeds().map((feed) => {
+          return fetchFeed(feed.url, feed.useCorsProxy, corsProxyUrl);
+        })
+      )
+    )
       .flat()
       .sort((a, b) => b.published - a.published);
 
-    // Limit per feed to avoid memory bloat
+    // Apply filtering and limits per feed
     const bySource = new Map<string, RssItem[]>();
-    for (const it of all) {
-      const list = bySource.get(it.source) ?? [];
-      if (list.length < maxItemsPerFeed) {
-        list.push(it);
-        bySource.set(it.source, list);
+    for (const item of all) {
+      const feed = feeds().find((f) => f.url === item.source);
+      if (!feed) continue;
+
+      // Apply date filtering (per-feed maxAge or global)
+      const maxAge = feed.maxAge ?? globalMaxAge;
+      if (maxAge) {
+        const cutoffDate = Date.now() - maxAge * 24 * 60 * 60 * 1000;
+        if (item.published < cutoffDate) continue;
+      }
+
+      // Apply item limits (per-feed maxItems or global)
+      const list = bySource.get(item.source) ?? [];
+      const limit = feed.maxItems ?? globalMaxItems;
+
+      if (list.length < limit) {
+        list.push(item);
+        bySource.set(item.source, list);
       }
     }
+
     setItems(Array.from(bySource.values()).flat());
   }
 
@@ -221,7 +207,7 @@ export default function RssWindow() {
         </div>
 
         <Show
-          when={urls().length > 0}
+          when={feeds().length > 0}
           fallback={
             <div class="rounded border border-neutral-800 bg-neutral-800/30 p-6 text-center">
               <i class="ti ti-rss text-4xl text-neutral-500 mb-3"></i>

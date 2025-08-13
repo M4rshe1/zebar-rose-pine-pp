@@ -58,7 +58,14 @@ const defaultLayout: Layout = {
 render(() => <App />, document.getElementById("root")!);
 
 function App() {
-  const [layout, setLayout] = createSignal<Layout>(defaultLayout);
+  const persistKey = "zrp:layout:komorebi";
+  let initial = defaultLayout;
+  try {
+    const saved = localStorage.getItem(persistKey);
+    if (saved) initial = JSON.parse(saved) as Layout;
+  } catch {}
+
+  const [layout, setLayout] = createSignal<Layout>(initial);
   const searchParams = new URLSearchParams(window.location.search);
   const [configOpen, setConfigOpen] = createSignal(searchParams.has("config"));
   const [rssOpen, setRssOpen] = createSignal(searchParams.has("rss"));
@@ -74,7 +81,7 @@ function App() {
       <ConfigMenu
         layout={layout()}
         onChange={setLayout}
-        persistKey={`zrp:layout:komorebi`}
+        persistKey={persistKey}
         initialOpen={configOpen()}
         onOpenChange={setConfigOpen}
       />

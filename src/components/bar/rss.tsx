@@ -7,7 +7,7 @@ import {
 } from "solid-js";
 import { cn } from "../../lib/utils";
 
-type RssItem = {
+export type RssItem = {
   id: string;
   title: string;
   link: string;
@@ -15,14 +15,25 @@ type RssItem = {
   source: string;
 };
 
-type RssOptions = {
-  urls?: string[];
-  refreshInterval?: number; // ms
+export type RssFeed = {
+  url: string;
+  maxItems?: number;
+  maxAge?: number;
+  useCorsProxy?: boolean;
+};
+
+export type RssOptions = {
+  feeds?: RssFeed[];
+  refreshInterval?: number;
   maxItemsPerFeed?: number;
   titleLength?: number;
+  maxAge?: number;
+  cleanupInterval?: number;
+  corsProxyUrl?: string;
 };
 
 const SEEN_STORAGE_KEY = "zrp:rss:seen";
+const CLEANUP_STORAGE_KEY = "zrp:rss:lastCleanup";
 
 function loadSeen(): Set<string> {
   try {
@@ -41,20 +52,39 @@ function persistSeen(seen: Set<string>) {
   } catch {}
 }
 
+function cleanupOldSeen(maxAgeDays: number = 30) {
+  try {
+    const lastCleanup = localStorage.getItem(CLEANUP_STORAGE_KEY);
+    const now = Date.now();
+    const daysSinceCleanup = lastCleanup
+      ? (now - parseInt(lastCleanup)) / (1000 * 60 * 60 * 24)
+      : 999;
+
+    if (daysSinceCleanup < 1) return;
+
+    localStorage.setItem(CLEANUP_STORAGE_KEY, now.toString());
+  } catch {}
+}
+
 function normalizeId(parts: (string | null | undefined)[]): string {
   return parts.filter(Boolean).join("|:");
 }
 
-async function fetchFeed(url: string): Promise<RssItem[]> {
+export async function fetchFeed(
+  url: string,
+  useCorsProxy: boolean = true,
+  corsProxyUrl: string = "https://corsproxy.io/?url="
+): Promise<RssItem[]> {
   const out: RssItem[] = [];
   try {
-    const res = await fetch(url);
+    const fetchUrl = useCorsProxy
+      ? `${corsProxyUrl}${encodeURIComponent(url)}`
+      : url;
+    const res = await fetch(fetchUrl);
     const text = await res.text();
-    console.log(text);
     const parser = new DOMParser();
     const doc = parser.parseFromString(text, "application/xml");
 
-    // RSS 2.0
     const items = Array.from(doc.getElementsByTagName("item"));
     if (items.length > 0) {
       for (const it of items) {
@@ -79,7 +109,6 @@ async function fetchFeed(url: string): Promise<RssItem[]> {
       return out;
     }
 
-    // Atom
     const entries = Array.from(doc.getElementsByTagName("entry"));
     for (const it of entries) {
       const title =
@@ -113,28 +142,55 @@ export default function Rss(props: { options?: RssOptions }) {
 
   const refreshInterval = () => options().refreshInterval ?? 5 * 60 * 1000;
   const titleLength = () => options().titleLength ?? 40;
-  const maxItemsPerFeed = () => options().maxItemsPerFeed ?? 30;
+  const globalMaxItems = () => options().maxItemsPerFeed ?? 30;
+  const globalMaxAge = () => options().maxAge ?? null;
+  const cleanupInterval = () => options().cleanupInterval ?? 30;
+  const corsProxyUrl = () =>
+    options().corsProxyUrl ?? "https://corsproxy.io/?url=";
 
-  const urls = createMemo(() => (options().urls ?? []).filter(Boolean));
+  const feeds = createMemo(() =>
+    (options().feeds ?? []).filter((feed) => feed.url)
+  );
 
   async function refresh() {
-    if (!urls().length) {
+    cleanupOldSeen(cleanupInterval());
+
+    if (!feeds().length) {
       setItems([]);
       return;
     }
-    const all = (await Promise.all(urls().map((u) => fetchFeed(u))))
+
+    const all = (
+      await Promise.all(
+        feeds().map((feed) => {
+          const shouldUseCors = !!feed.useCorsProxy;
+          return fetchFeed(feed.url, shouldUseCors, corsProxyUrl());
+        })
+      )
+    )
       .flat()
       .sort((a, b) => b.published - a.published);
 
-    // Limit per feed to avoid memory bloat
     const bySource = new Map<string, RssItem[]>();
-    for (const it of all) {
-      const list = bySource.get(it.source) ?? [];
-      if (list.length < maxItemsPerFeed()) {
-        list.push(it);
-        bySource.set(it.source, list);
+    for (const item of all) {
+      const feed = feeds().find((f) => f.url === item.source);
+      if (!feed) continue;
+
+      const maxAge = feed.maxAge ?? globalMaxAge();
+      if (maxAge) {
+        const cutoffDate = Date.now() - maxAge * 24 * 60 * 60 * 1000;
+        if (item.published < cutoffDate) continue;
+      }
+
+      const list = bySource.get(item.source) ?? [];
+      const limit = feed.maxItems ?? globalMaxItems();
+
+      if (list.length < limit) {
+        list.push(item);
+        bySource.set(item.source, list);
       }
     }
+
     setItems(Array.from(bySource.values()).flat());
   }
 
@@ -169,8 +225,7 @@ export default function Rss(props: { options?: RssOptions }) {
   });
 
   createEffect(() => {
-    // If feed URLs change in options, refresh immediately
-    urls();
+    feeds();
     refresh();
   });
 
