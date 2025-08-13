@@ -38,11 +38,24 @@ export default function ConfigMenu(props: ConfigMenuProps) {
 
   const [openColumnIdx, setOpenColumnIdx] = createSignal<number | null>(null);
 
-  // For import/export modal
-  const [showImportExport, setShowImportExport] = createSignal(false);
-  const [importExportMode, setImportExportMode] = createSignal<"import" | "export">("export");
-  const [importExportText, setImportExportText] = createSignal("");
-  const [importExportError, setImportExportError] = createSignal<string | null>(null);
+  // For local editing state for text/number/select/textarea fields
+  const [localTopMargin, setLocalTopMargin] = createSignal(props.layout.topMargin);
+  const [localXMargin, setLocalXMargin] = createSignal(props.layout.xMargin);
+
+  // For per-column width editing
+  const [localColWidths, setLocalColWidths] = createSignal<{ [idx: number]: number | string }>({});
+
+  // For per-component options editing
+  const [localOptions, setLocalOptions] = createSignal<{ [key: string]: string }>({});
+
+  // For per-column align editing
+  const [localColAligns, setLocalColAligns] = createSignal<{ [idx: number]: string }>({});
+
+  // For per-column width type editing
+  const [localColWidthTypes, setLocalColWidthTypes] = createSignal<{ [idx: number]: string }>({});
+
+  // For per-component type editing
+  const [localCompTypes, setLocalCompTypes] = createSignal<{ [key: string]: string }>({});
 
   createEffect(() => {
     props.onOpenChange?.(open());
@@ -155,6 +168,39 @@ export default function ConfigMenu(props: ConfigMenuProps) {
     return options ? JSON.stringify(options, null, 2) : "";
   };
 
+  // Sync local state with props.layout when layout changes
+  createEffect(() => {
+    setLocalTopMargin(props.layout.topMargin);
+    setLocalXMargin(props.layout.xMargin);
+
+    // Per-column width and align
+    const colWidths: { [idx: number]: number | string } = {};
+    const colAligns: { [idx: number]: string } = {};
+    const colWidthTypes: { [idx: number]: string } = {};
+    props.layout.columns.forEach((col, idx) => {
+      colWidths[idx] = col.width;
+      colAligns[idx] = col.align;
+      colWidthTypes[idx] = typeof col.width === "string" ? col.width : "number";
+    });
+    setLocalColWidths(colWidths);
+    setLocalColAligns(colAligns);
+    setLocalColWidthTypes(colWidthTypes);
+
+    // Per-component options and type
+    const options: { [key: string]: string } = {};
+    const compTypes: { [key: string]: string } = {};
+    props.layout.columns.forEach((col, colIdx) => {
+      col.components.forEach((comp, compIdx) => {
+        options[`${colIdx}-${compIdx}`] = comp.options
+          ? JSON.stringify(comp.options, null, 2)
+          : "";
+        compTypes[`${colIdx}-${compIdx}`] = comp.type;
+      });
+    });
+    setLocalOptions(options);
+    setLocalCompTypes(compTypes);
+  });
+
   return (
     <Show when={open()}>
       <div class="h-full w-full overflow-auto bg-neutral-900 p-3 text-neutral-200 shadow-xl">
@@ -165,12 +211,14 @@ export default function ConfigMenu(props: ConfigMenuProps) {
               <input
                 type="number"
                 class="w-full rounded bg-neutral-800 px-2 py-1"
-                value={props.layout.topMargin}
-                onInput={(e) =>
-                  updateLayout(
-                    (l) => (l.topMargin = Number(e.currentTarget.value))
-                  )
-                }
+                value={localTopMargin()}
+                onInput={(e) => setLocalTopMargin(Number(e.currentTarget.value))}
+                onBlur={(e) => {
+                  const val = Number(e.currentTarget.value);
+                  if (!isNaN(val)) {
+                    updateLayout((l) => (l.topMargin = val));
+                  }
+                }}
               />
             </label>
             <label class="text-sm">
@@ -178,12 +226,14 @@ export default function ConfigMenu(props: ConfigMenuProps) {
               <input
                 type="number"
                 class="w-full rounded bg-neutral-800 px-2 py-1"
-                value={props.layout.xMargin}
-                onInput={(e) =>
-                  updateLayout(
-                    (l) => (l.xMargin = Number(e.currentTarget.value))
-                  )
-                }
+                value={localXMargin()}
+                onInput={(e) => setLocalXMargin(Number(e.currentTarget.value))}
+                onBlur={(e) => {
+                  const val = Number(e.currentTarget.value);
+                  if (!isNaN(val)) {
+                    updateLayout((l) => (l.xMargin = val));
+                  }
+                }}
               />
             </label>
           </div>
@@ -231,14 +281,20 @@ export default function ConfigMenu(props: ConfigMenuProps) {
                           <div class="mb-1 text-neutral-400">Align</div>
                           <select
                             class="w-full rounded bg-neutral-800 px-2 py-1"
-                            value={col.align}
-                            onChange={(e) =>
+                            value={localColAligns()[idx] ?? col.align}
+                            onInput={(e) => {
+                              setLocalColAligns((prev) => ({
+                                ...prev,
+                                [idx]: e.currentTarget.value,
+                              }));
+                            }}
+                            onBlur={(e) => {
                               updateLayout(
                                 (l) =>
                                   (l.columns[idx].align = e.currentTarget
                                     .value as any)
-                              )
-                            }
+                              );
+                            }}
                           >
                             <option value="left">left</option>
                             <option value="center">center</option>
@@ -250,12 +306,14 @@ export default function ConfigMenu(props: ConfigMenuProps) {
                           <div class="flex items-center gap-2">
                             <select
                               class="w-28 rounded bg-neutral-800 px-2 py-1"
-                              value={
-                                typeof col.width === "string"
-                                  ? col.width
-                                  : "number"
-                              }
-                              onChange={(e) =>
+                              value={localColWidthTypes()[idx] ?? (typeof col.width === "string" ? col.width : "number")}
+                              onInput={(e) => {
+                                setLocalColWidthTypes((prev) => ({
+                                  ...prev,
+                                  [idx]: e.currentTarget.value,
+                                }));
+                              }}
+                              onBlur={(e) => {
                                 updateLayout((l) => {
                                   const val = e.currentTarget.value;
                                   l.columns[idx].width =
@@ -264,28 +322,39 @@ export default function ConfigMenu(props: ConfigMenuProps) {
                                       : typeof col.width === "number"
                                       ? col.width
                                       : 1;
-                                })
-                              }
+                                });
+                              }}
                             >
                               <option value="auto">auto</option>
                               <option value="number">fraction</option>
                             </select>
-                            <Show when={typeof col.width === "number"}>
+                            <Show when={typeof col.width === "number" || localColWidthTypes()[idx] === "number"}>
                               <input
                                 type="number"
                                 min="1"
                                 class="w-full rounded bg-neutral-800 px-2 py-1"
                                 value={
-                                  typeof col.width === "number" ? col.width : 1
+                                  localColWidths()[idx] !== undefined
+                                    ? localColWidths()[idx]
+                                    : typeof col.width === "number"
+                                    ? col.width
+                                    : 1
                                 }
-                                onInput={(e) =>
-                                  updateLayout(
-                                    (l) =>
-                                      (l.columns[idx].width = Number(
-                                        e.currentTarget.value
-                                      ))
-                                  )
-                                }
+                                onInput={(e) => {
+                                  setLocalColWidths((prev) => ({
+                                    ...prev,
+                                    [idx]: Number(e.currentTarget.value),
+                                  }));
+                                }}
+                                onBlur={(e) => {
+                                  const val = Number(e.currentTarget.value);
+                                  if (!isNaN(val)) {
+                                    updateLayout(
+                                      (l) =>
+                                        (l.columns[idx].width = val)
+                                    );
+                                  }
+                                }}
                               />
                             </Show>
                           </div>
@@ -297,80 +366,112 @@ export default function ConfigMenu(props: ConfigMenuProps) {
                       </div>
                       <div class="space-y-2">
                         <For each={col.components}>
-                          {(comp, compIdx) => (
-                            <div class="rounded bg-neutral-800 p-2">
-                              <div class="mb-2 flex items-center justify-between">
-                                <div class="text-xs text-neutral-300">
-                                  #{compIdx() + 1}
-                                </div>
-                                <div class="flex items-center gap-2">
-                                  <button
-                                    class="text-xs rounded bg-neutral-700 px-2 py-0.5 hover:bg-neutral-600"
-                                    onClick={() =>
-                                      moveComponent(idx, compIdx(), -1)
-                                    }
-                                  >
-                                    ↑
-                                  </button>
-                                  <button
-                                    class="text-xs rounded bg-neutral-700 px-2 py-0.5 hover:bg-neutral-600"
-                                    onClick={() =>
-                                      moveComponent(idx, compIdx(), 1)
-                                    }
-                                  >
-                                    ↓
-                                  </button>
-                                  <button
-                                    class="text-xs text-red-300 hover:text-red-200"
-                                    onClick={() =>
-                                      removeComponent(idx, compIdx())
-                                    }
-                                  >
-                                    Remove
-                                  </button>
-                                </div>
-                              </div>
-                              <div class="grid grid-cols-3 gap-2">
-                                <label class="text-sm col-span-1">
-                                  <div class="mb-1 text-neutral-400">Type</div>
-                                  <select
-                                    class="w-full rounded bg-neutral-900 px-2 py-1"
-                                    value={comp.type}
-                                    onChange={(e) =>
-                                      setComponentType(
-                                        idx,
-                                        compIdx(),
-                                        e.currentTarget.value as ComponentType
-                                      )
-                                    }
-                                  >
-                                    <For each={availableComponents}>
-                                      {(t) => <option value={t}>{t}</option>}
-                                    </For>
-                                  </select>
-                                </label>
-                                <label class="text-sm col-span-2">
-                                  <div class="mb-1 text-neutral-400">
-                                    Options (JSON)
+                          {(comp, compIdx) => {
+                            const compKey = `${idx}-${compIdx()}`;
+                            return (
+                              <div class="rounded bg-neutral-800 p-2">
+                                <div class="mb-2 flex items-center justify-between">
+                                  <div class="text-xs text-neutral-300">
+                                    #{compIdx() + 1}
                                   </div>
-                                  <textarea
-                                    class="h-20 w-full rounded bg-neutral-900 px-2 py-1 font-mono text-xs"
-                                    value={componentOptionsString(
-                                      idx,
-                                      compIdx()
-                                    )}
-                                    onInput={(e) =>
-                                      setComponentOptions(
-                                        idx,
-                                        compIdx(),
-                                        e.currentTarget.value
-                                      )
-                                    }
-                                  />
-                                </label>
+                                  <div class="flex items-center gap-2">
+                                    <button
+                                      class="text-xs rounded bg-neutral-700 px-2 py-0.5 hover:bg-neutral-600"
+                                      onClick={() =>
+                                        moveComponent(idx, compIdx(), -1)
+                                      }
+                                    >
+                                      ↑
+                                    </button>
+                                    <button
+                                      class="text-xs rounded bg-neutral-700 px-2 py-0.5 hover:bg-neutral-600"
+                                      onClick={() =>
+                                        moveComponent(idx, compIdx(), 1)
+                                      }
+                                    >
+                                      ↓
+                                    </button>
+                                    <button
+                                      class="text-xs text-red-300 hover:text-red-200"
+                                      onClick={() =>
+                                        removeComponent(idx, compIdx())
+                                      }
+                                    >
+                                      Remove
+                                    </button>
+                                  </div>
+                                </div>
+                                <div class="grid grid-cols-3 gap-2">
+                                  <label class="text-sm col-span-1">
+                                    <div class="mb-1 text-neutral-400">Type</div>
+                                    <select
+                                      class="w-full rounded bg-neutral-900 px-2 py-1"
+                                      value={localCompTypes()[compKey] ?? comp.type}
+                                      onInput={(e) => {
+                                        setLocalCompTypes((prev) => ({
+                                          ...prev,
+                                          [compKey]: e.currentTarget.value,
+                                        }));
+                                      }}
+                                      onBlur={(e) =>
+                                        setComponentType(
+                                          idx,
+                                          compIdx(),
+                                          e.currentTarget.value as ComponentType
+                                        )
+                                      }
+                                    >
+                                      <For each={availableComponents}>
+                                        {(t) => <option value={t}>{t}</option>}
+                                      </For>
+                                    </select>
+                                  </label>
+                                  <label class="text-sm col-span-2">
+                                    <div class="mb-1 text-neutral-400">
+                                      Options (JSON)
+                                    </div>
+                                    <textarea
+                                      class="h-20 w-full rounded bg-neutral-900 px-2 py-1 font-mono text-xs"
+                                      value={localOptions()[compKey] ?? componentOptionsString(idx, compIdx())}
+                                      onInput={(e) => {
+                                        setLocalOptions((prev) => ({
+                                          ...prev,
+                                          [compKey]: e.currentTarget.value,
+                                        }));
+                                        // Check if parsable, but do not save yet
+                                        const val = e.currentTarget.value;
+                                        if (val.trim() === "") {
+                                          setJsonError(null);
+                                        } else {
+                                          try {
+                                            JSON.parse(val);
+                                            setJsonError(null);
+                                          } catch {
+                                            setJsonError("Invalid JSON for options");
+                                          }
+                                        }
+                                      }}
+                                      onBlur={(e) => {
+                                        const val = e.currentTarget.value;
+                                        if (val.trim() === "") {
+                                          setJsonError(null);
+                                          setComponentOptions(idx, compIdx(), "");
+                                        } else {
+                                          try {
+                                            JSON.parse(val);
+                                            setJsonError(null);
+                                            setComponentOptions(idx, compIdx(), val);
+                                          } catch {
+                                            setJsonError("Invalid JSON for options");
+                                          }
+                                        }
+                                      }}
+                                    />
+                                  </label>
+                                </div>
                               </div>
-                            </div>
-                          )}
+                            );
+                          }}
                         </For>
 
                         <div class="flex items-center gap-2">

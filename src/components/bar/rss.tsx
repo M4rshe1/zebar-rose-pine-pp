@@ -5,7 +5,8 @@ import {
   onCleanup,
   onMount,
 } from "solid-js";
-import { cn } from "../../lib/utils";
+import { cn, validateOptions } from "../../lib/utils";
+import z from "zod";
 
 export type RssItem = {
   id: string;
@@ -31,6 +32,23 @@ export type RssOptions = {
   cleanupInterval?: number;
   corsProxyUrl?: string;
 };
+
+export const RssSchema = z.object({
+  feeds: z.array(
+    z.object({
+      url: z.string(),
+      maxItems: z.number().optional(),
+      maxAge: z.number().optional(),
+      useCorsProxy: z.boolean().optional(),
+    })
+  ),
+  refreshInterval: z.number().optional(),
+  maxItemsPerFeed: z.number().optional(),
+  titleLength: z.number().optional(),
+  maxAge: z.number().optional(),
+  cleanupInterval: z.number().optional(),
+  corsProxyUrl: z.string().optional(),
+});
 
 const SEEN_STORAGE_KEY = "zrp:rss:seen";
 const CLEANUP_STORAGE_KEY = "zrp:rss:lastCleanup";
@@ -135,8 +153,8 @@ export async function fetchFeed(
   }
 }
 
-export default function Rss(props: { options?: RssOptions }) {
-  const options = () => props.options ?? {};
+export default function Rss(props: { options?: { [key: string]: any } }) {
+  const options = () => validateOptions(props.options ?? {}, RssSchema);
   const [items, setItems] = createSignal<RssItem[]>([]);
   const [seen, setSeen] = createSignal<Set<string>>(loadSeen());
 
