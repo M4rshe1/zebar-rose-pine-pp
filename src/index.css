@@ -116,12 +116,20 @@ body {
   font-size: 12px;
   font-weight: 600;
   overflow: hidden;
+  background: transparent;
 }
 
 html,
 body,
 #root {
   height: 100%;
+  background: transparent;
+}
+
+#root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
 }
 
 .systray-icon {

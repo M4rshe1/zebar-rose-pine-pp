@@ -1,12 +1,19 @@
 import * as zebar from "zebar";
-import { cn } from "../../utils";
-import Background from "./background";
-import { Accessor, For } from "solid-js";
+import { cn } from "../../lib/utils";
+import { Accessor, For, Show, createSignal } from "solid-js";
 
-function Komorebi(props: { komorebi: zebar.KomorebiOutput }) {
+function Komorebi() {
+  const providers = zebar.createProviderGroup({
+    komorebi: { type: "komorebi" },
+  });
+  const [komorebi, setKomorebi] = createSignal<
+    zebar.KomorebiOutput | undefined
+  >(providers.outputMap.komorebi);
+  providers.onOutput((map) => setKomorebi(map.komorebi));
+
   return (
-    <Background align="center">
-      <For each={props.komorebi.allWorkspaces}>
+    <Show when={komorebi()}>
+      <For each={komorebi()!.allWorkspaces}>
         {(
           workspace: zebar.KomorebiOutput["allWorkspaces"][number],
           idx: Accessor<number>
@@ -60,7 +67,7 @@ function Komorebi(props: { komorebi: zebar.KomorebiOutput }) {
           </button>
         )}
       </For>
-    </Background>
+    </Show>
   );
 }
 

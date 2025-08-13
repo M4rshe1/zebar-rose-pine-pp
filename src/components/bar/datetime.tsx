@@ -1,5 +1,5 @@
 import * as zebar from "zebar";
-import { cn } from "../../utils";
+import { cn } from "../../lib/utils";
 import { createSignal, createEffect, onCleanup } from "solid-js";
 
 function Datetime(props: { noIcon?: boolean }) {
