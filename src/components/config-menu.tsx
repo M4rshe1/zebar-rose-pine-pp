@@ -16,6 +16,7 @@ type ComponentType =
   | "media"
   | "network"
   | "datetime"
+  | "rss"
   | "wm"
   | "systray";
 
@@ -49,6 +50,7 @@ export default function ConfigMenu(props: ConfigMenuProps) {
     "media",
     "network",
     "datetime",
+    "rss",
     "wm",
     "systray",
   ];

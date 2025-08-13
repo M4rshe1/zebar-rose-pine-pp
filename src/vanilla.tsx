@@ -3,6 +3,7 @@ import "./index.css";
 import { render } from "solid-js/web";
 import Base, { Layout } from "./base";
 import ConfigMenu from "./components/config-menu";
+import RssWindow from "./components/rss-window";
 import { createSignal, Show } from "solid-js";
 
 const defaultLayout: Layout = {
@@ -62,13 +63,16 @@ function App() {
   } catch {}
 
   const [layout, setLayout] = createSignal<Layout>(initial);
-  const [configOpen, setConfigOpen] = createSignal(
-    new URLSearchParams(window.location.search).has("config")
-  );
+  const searchParams = new URLSearchParams(window.location.search);
+  const [configOpen, setConfigOpen] = createSignal(searchParams.has("config"));
+  const [rssOpen, setRssOpen] = createSignal(searchParams.has("rss"));
 
   return (
     <>
-      <Show when={!configOpen()}>
+      <Show when={rssOpen()}>
+        <RssWindow />
+      </Show>
+      <Show when={!configOpen() && !rssOpen()}>
         <Base wm="vanilla" layout={layout()} setLayout={setLayout} />
       </Show>
       <ConfigMenu
