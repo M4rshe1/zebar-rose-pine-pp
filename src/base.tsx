@@ -11,6 +11,7 @@ import { createMemo, Index, Match, onCleanup, onMount, Switch } from "solid-js";
 import Komorebi from "./components/bar/komorebi";
 import { cn } from "./lib/utils";
 import { ProvidersProvider } from "./lib/providers-context";
+import Rss from "./components/bar/rss";
 
 export interface Layout {
   topMargin: number;
@@ -28,6 +29,7 @@ export interface Layout {
         | "media"
         | "network"
         | "datetime"
+        | "rss"
         | "wm"
         | "systray";
       options?: { [key: string]: any };
@@ -142,6 +144,9 @@ const Base = (props: {
                       </Match>
                       <Match when={component().type === "datetime"}>
                         <Datetime />
+                      </Match>
+                      <Match when={component().type === "rss"}>
+                        <Rss options={component().options} />
                       </Match>
                     </Switch>
                   )}

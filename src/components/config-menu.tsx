@@ -16,6 +16,7 @@ type ComponentType =
   | "media"
   | "network"
   | "datetime"
+  | "rss"
   | "wm"
   | "systray";
 
@@ -37,6 +38,12 @@ export default function ConfigMenu(props: ConfigMenuProps) {
 
   const [openColumnIdx, setOpenColumnIdx] = createSignal<number | null>(null);
 
+  // For import/export modal
+  const [showImportExport, setShowImportExport] = createSignal(false);
+  const [importExportMode, setImportExportMode] = createSignal<"import" | "export">("export");
+  const [importExportText, setImportExportText] = createSignal("");
+  const [importExportError, setImportExportError] = createSignal<string | null>(null);
+
   createEffect(() => {
     props.onOpenChange?.(open());
   });
@@ -49,6 +56,7 @@ export default function ConfigMenu(props: ConfigMenuProps) {
     "media",
     "network",
     "datetime",
+    "rss",
     "wm",
     "systray",
   ];
@@ -142,16 +150,14 @@ export default function ConfigMenu(props: ConfigMenuProps) {
   });
   onCleanup(() => window.removeEventListener("keydown", keydownHandler));
 
-  const componentOptionsString = (colIdx: number, compIdx: number) =>
-    JSON.stringify(
-      props.layout.columns[colIdx].components[compIdx].options ?? "",
-      null,
-      2
-    );
+  const componentOptionsString = (colIdx: number, compIdx: number) => {
+    const options = props.layout.columns[colIdx].components[compIdx].options;
+    return options ? JSON.stringify(options, null, 2) : "";
+  };
 
   return (
     <Show when={open()}>
-      <div class="mt-2 h-full w-full overflow-auto rounded border border-neutral-700 bg-neutral-900/95 p-3 text-neutral-200 shadow-xl backdrop-blur">
+      <div class="h-full w-full overflow-auto bg-neutral-900 p-3 text-neutral-200 shadow-xl">
         <div class="space-y-3">
           <div class="grid grid-cols-2 gap-2">
             <label class="text-sm">
