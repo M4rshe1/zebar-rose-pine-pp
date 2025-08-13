@@ -1,58 +1,67 @@
-import * as zebar from "zebar";
 import { cn } from "../../lib/utils";
 import { Match, Show, Switch } from "solid-js/web";
 import { createEffect, createSignal } from "solid-js";
+import { useProviders } from "../../lib/providers-context";
 
 function Battery() {
-  const providers = zebar.createProviderGroup({
-    battery: { type: "battery" },
-  });
-  const [battery, setBattery] = createSignal<zebar.BatteryOutput | undefined>(
-    providers.outputMap.battery
-  );
-  providers.onOutput((map) => setBattery(map.battery));
+  const { battery } = useProviders();
+  const [batterySig, setBatterySig] = createSignal(battery());
+  createEffect(() => setBatterySig(battery()));
 
   const [isAnimating, setIsAnimating] = createSignal(false);
 
   createEffect(() => {
-    const b = battery();
+    const b = batterySig();
     setIsAnimating(!!b && b.isCharging && b.chargePercent < 100);
   });
 
   return (
-    <Show when={battery()}>
+    <Show when={batterySig()}>
       <div
         class={cn(
           "h-8 flex group items-center justify-center overflow-hidden gap-2 text-[var(--battery)] bg-[var(--battery)]/10 rounded-full pr-3 pl-4 relative",
           {
             "text-[var(--battery-low)] animate-flash":
-              battery()!.chargePercent < 20,
+              batterySig()!.chargePercent < 20,
             "text-[var(--battery-mid)]":
-              battery()!.chargePercent > 20 && battery()!.chargePercent < 70,
+              batterySig()!.chargePercent > 20 &&
+              batterySig()!.chargePercent < 70,
             "text-[var(--battery-good)]":
-              (battery()!.chargePercent >= 70 &&
-                battery()!.chargePercent < 90) ||
-              battery()!.isCharging,
+              (batterySig()!.chargePercent >= 70 &&
+                batterySig()!.chargePercent < 90) ||
+              batterySig()!.isCharging,
           }
         )}
       >
         <Switch>
-          <Match when={battery()!.isCharging && battery()!.chargePercent < 100}>
+          <Match
+            when={batterySig()!.isCharging && batterySig()!.chargePercent < 100}
+          >
             <i class="ti ti-battery-charging text-2xl"></i>
           </Match>
-          <Match when={battery()!.chargePercent > 90 && !battery()!.isCharging}>
+          <Match
+            when={batterySig()!.chargePercent > 90 && !batterySig()!.isCharging}
+          >
             <i class="ti ti-battery-4 text-2xl"></i>
           </Match>
-          <Match when={battery()!.chargePercent > 70 && !battery()!.isCharging}>
+          <Match
+            when={batterySig()!.chargePercent > 70 && !batterySig()!.isCharging}
+          >
             <i class="ti ti-battery-3 text-2xl"></i>
           </Match>
-          <Match when={battery()!.chargePercent > 40 && !battery()!.isCharging}>
+          <Match
+            when={batterySig()!.chargePercent > 40 && !batterySig()!.isCharging}
+          >
             <i class="ti ti-battery-2 text-2xl"></i>
           </Match>
-          <Match when={battery()!.chargePercent > 20 && !battery()!.isCharging}>
+          <Match
+            when={batterySig()!.chargePercent > 20 && !batterySig()!.isCharging}
+          >
             <i class="ti ti-battery-1 text-2xl"></i>
           </Match>
-          <Match when={battery()!.chargePercent > 0 && !battery()!.isCharging}>
+          <Match
+            when={batterySig()!.chargePercent > 0 && !batterySig()!.isCharging}
+          >
             <i class="ti ti-battery-exclamation text-lg text-current"></i>
           </Match>
         </Switch>
@@ -65,13 +74,15 @@ function Battery() {
               }
             )}
             style={{
-              "--tw-battery-width": `${battery()!.chargePercent}%`,
-              width: isAnimating() ? undefined : `${battery()!.chargePercent}%`,
+              "--tw-battery-width": `${batterySig()!.chargePercent}%`,
+              width: isAnimating()
+                ? undefined
+                : `${batterySig()!.chargePercent}%`,
             }}
           ></div>
         </div>
         <span class="transition-all -translate-y-6 duration-300 opacity-0 group-hover:opacity-100 group-hover:translate-y-0 absolute left-12 text-base">
-          {battery()!.chargePercent.toFixed(0)}%
+          {batterySig()!.chargePercent.toFixed(0)}%
         </span>
       </div>
     </Show>

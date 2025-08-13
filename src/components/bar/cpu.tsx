@@ -1,18 +1,14 @@
-import * as zebar from "zebar";
 import { cn } from "../../lib/utils";
-import { createSignal, Show } from "solid-js";
+import { Show, createEffect, createSignal } from "solid-js";
+import { useProviders } from "../../lib/providers-context";
 
 function Cpu() {
-  const providers = zebar.createProviderGroup({
-    cpu: { type: "cpu" },
-  });
-  const [cpu, setCpu] = createSignal<zebar.CpuOutput | undefined>(
-    providers.outputMap.cpu
-  );
-  providers.onOutput((map) => setCpu(map.cpu));
+  const { cpu } = useProviders();
+  const [cpuSig, setCpuSig] = createSignal(cpu());
+  createEffect(() => setCpuSig(cpu()));
 
   return (
-    <Show when={cpu()}>
+    <Show when={cpuSig()}>
       <div
         class={cn(
           "h-8 flex group items-center justify-center overflow-hidden gap-2 text-[var(--cpu)] bg-[var(--cpu)]/10 rounded-full pr-3 pl-4 relative"
@@ -23,12 +19,12 @@ function Cpu() {
           <div
             class="h-full bg-[var(--cpu)] rounded-full"
             style={{
-              width: `${cpu()!.usage}%`,
+              width: `${cpuSig()!.usage}%`,
             }}
           ></div>
         </div>
         <span class="transition-all -translate-y-6 duration-300 opacity-0 group-hover:opacity-100 group-hover:translate-y-0 absolute left-13 text-base">
-          {cpu()!.usage.toFixed(0)}%
+          {cpuSig()!.usage.toFixed(0)}%
         </span>
       </div>
     </Show>

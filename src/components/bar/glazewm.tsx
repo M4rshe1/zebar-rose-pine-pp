@@ -1,24 +1,26 @@
-import * as zebar from "zebar";
 import { cn } from "../../lib/utils";
-import { For, Show, createSignal } from "solid-js";
+import { createEffect, createSignal, For, Show } from "solid-js";
+import { useProviders } from "../../lib/providers-context";
+import * as zebar from "zebar";
 
 function Glazewm() {
-  const providers = zebar.createProviderGroup({
-    glazewm: { type: "glazewm" },
+  const [glazewmSig, setGlazewmSig] = createSignal<
+    zebar.GlazeWmOutput | undefined
+  >(undefined);
+  const { glazewm } = useProviders();
+
+  createEffect(() => {
+    setGlazewmSig(glazewm());
   });
-  const [glazewm, setGlazewm] = createSignal<zebar.GlazeWmOutput | undefined>(
-    providers.outputMap.glazewm
-  );
-  providers.onOutput((map) => setGlazewm(map.glazewm));
 
   return (
-    <Show when={glazewm()}>
+    <Show when={glazewmSig()}>
       <div class="flex items-center justify-center gap-1">
-        <For each={glazewm()!.currentWorkspaces}>
-          {(workspace: zebar.GlazeWmOutput["currentWorkspaces"][number]) => (
+        <For each={glazewmSig()!.currentWorkspaces}>
+          {(workspace) => (
             <button
               onClick={() =>
-                glazewm()!.runCommand(`focus --workspace ${workspace.name}`)
+                glazewmSig()!.runCommand(`focus --workspace ${workspace.name}`)
               }
               class={cn(
                 "flex items-center justify-center rounded-full p-1 group",

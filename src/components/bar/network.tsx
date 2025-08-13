@@ -1,59 +1,50 @@
-import * as zebar from "zebar";
 import { cn } from "../../lib/utils";
 import { Match, Switch } from "solid-js/web";
-import { createSignal, Show } from "solid-js";
+import { Show, createEffect, createSignal } from "solid-js";
+import { useProviders } from "../../lib/providers-context";
 
 function Network() {
-  const providers = zebar.createProviderGroup({
-    network: { type: "network" },
-  });
-  const [network, setNetwork] = createSignal<zebar.NetworkOutput | undefined>(
-    providers.outputMap.network
-  );
-  providers.onOutput((map) => setNetwork(map.network));
+  const { network } = useProviders();
+  const [networkSig, setNetworkSig] = createSignal(network());
+  createEffect(() => setNetworkSig(network()));
 
   const getSignalStrength = () => {
-    if (!network()!.defaultGateway?.signalStrength) return 0;
-    return network()!.defaultGateway!.signalStrength!;
+    if (!networkSig()!.defaultGateway?.signalStrength) return 0;
+    return networkSig()!.defaultGateway!.signalStrength!;
   };
 
   const getNetworkType = () => {
     if (
-      network()!.defaultInterface?.type === "ethernet" ||
-      (network()!.interfaces.length > 0 &&
-        network()!.interfaces[0].type === "ethernet" &&
-        network()!.defaultInterface?.type !== "wifi")
+      networkSig()!.defaultInterface?.type === "ethernet" ||
+      (networkSig()!.interfaces.length > 0 &&
+        networkSig()!.interfaces[0].type === "ethernet" &&
+        networkSig()!.defaultInterface?.type !== "wifi")
     ) {
       return "ethernet";
     } else if (
-      network()!.defaultInterface?.type === "wifi" ||
-      (network()!.interfaces.length > 0 &&
-        network()!.interfaces[0].type === "wifi")
+      networkSig()!.defaultInterface?.type === "wifi" ||
+      (networkSig()!.interfaces.length > 0 &&
+        networkSig()!.interfaces[0].type === "wifi")
     ) {
       return "wifi";
     }
     return "disconnected";
   };
 
-  const networkType = getNetworkType();
-  const isEthernet = networkType === "ethernet";
-  const isWifi = networkType === "wifi";
-  const isDisconnected = networkType === "disconnected";
-
   return (
-    <Show when={network()}>
+    <Show when={networkSig()}>
       <div
         class={cn(
           "h-8 flex",
-          isEthernet ? "" : "group",
+          getNetworkType() === "ethernet" ? "" : "group",
           "items-center justify-center overflow-hidden gap-2 text-[var(--network)] bg-[var(--network)]/10 rounded-full px-2 relative"
         )}
       >
         <Switch>
-          <Match when={isEthernet}>
+          <Match when={getNetworkType() === "ethernet"}>
             <i class="ti ti-plug text-lg"></i>
           </Match>
-          <Match when={isWifi}>
+          <Match when={getNetworkType() === "wifi"}>
             <Switch>
               <Match when={getSignalStrength() < 25}>
                 <i class="ti ti-antenna-bars-1 text-lg"></i>
@@ -72,31 +63,33 @@ function Network() {
               </Match>
             </Switch>
           </Match>
-          <Match when={isDisconnected}>
+          <Match when={getNetworkType() === "disconnected"}>
             <i class="ti ti-antenna-bars-off text-lg"></i>
           </Match>
         </Switch>
 
-        {isWifi && (
+        {getNetworkType() === "wifi" && (
           <div
             class={cn(
               "flex items-center gap-2",
               "group-hover:translate-y-6 group-hover:opacity-0 transition-all duration-300"
             )}
           >
-            <span class="text-sm">{network()!.defaultGateway?.ssid || ""}</span>
+            <span class="text-sm">
+              {networkSig()!.defaultGateway?.ssid || ""}
+            </span>
           </div>
         )}
 
-        {isWifi && (
+        {getNetworkType() === "wifi" && (
           <span
             class={cn(
               "transition-all -translate-y-6 duration-300 opacity-0 absolute left-12 text-base",
               "group-hover:opacity-100 group-hover:translate-y-0"
             )}
           >
-            {network()!.defaultGateway?.signalStrength
-              ? `${network()!.defaultGateway!.signalStrength!}%`
+            {networkSig()!.defaultGateway?.signalStrength
+              ? `${networkSig()!.defaultGateway!.signalStrength!}%`
               : ""}
           </span>
         )}

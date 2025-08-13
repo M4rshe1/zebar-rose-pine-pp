@@ -1,9 +1,11 @@
 /* @refresh reload */
 import "./index.css";
 import { render } from "solid-js/web";
+import { createSignal, Show } from "solid-js";
 import Base, { Layout } from "./base";
+import ConfigMenu from "./components/config-menu";
 
-const layout: Layout = {
+const defaultLayout: Layout = {
   topMargin: 4,
   xMargin: 4,
   columns: [
@@ -55,5 +57,23 @@ const layout: Layout = {
 render(() => <App />, document.getElementById("root")!);
 
 function App() {
-  return <Base wm="glazewm" layout={layout} />;
+  const [layout, setLayout] = createSignal<Layout>(defaultLayout);
+  const [configOpen, setConfigOpen] = createSignal(
+    new URLSearchParams(window.location.search).has("config")
+  );
+
+  return (
+    <>
+      <Show when={!configOpen()}>
+        <Base wm="glazewm" layout={layout()} setLayout={setLayout} />
+      </Show>
+      <ConfigMenu
+        layout={layout()}
+        onChange={setLayout}
+        persistKey={`zrp:layout:glazewm`}
+        initialOpen={configOpen()}
+        onOpenChange={setConfigOpen}
+      />
+    </>
+  );
 }

@@ -1,4 +1,3 @@
-import * as zebar from "zebar";
 import { cn } from "../../lib/utils";
 import { createSignal, createEffect, onCleanup } from "solid-js";
 

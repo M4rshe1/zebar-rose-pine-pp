@@ -1,23 +1,22 @@
-import * as zebar from "zebar";
 import { cn } from "../../lib/utils";
-import { Accessor, For, Show, createSignal } from "solid-js";
+import { Accessor, createEffect, createSignal, For, Show } from "solid-js";
+import { useProviders } from "../../lib/providers-context";
+import * as zebar from "zebar";
 
 function Komorebi() {
-  const providers = zebar.createProviderGroup({
-    komorebi: { type: "komorebi" },
-  });
-  const [komorebi, setKomorebi] = createSignal<
+  const { komorebi } = useProviders();
+  const [komorebiSig, setKomorebiSig] = createSignal<
     zebar.KomorebiOutput | undefined
-  >(providers.outputMap.komorebi);
-  providers.onOutput((map) => setKomorebi(map.komorebi));
+  >(undefined);
+
+  createEffect(() => {
+    setKomorebiSig(komorebi());
+  });
 
   return (
     <Show when={komorebi()}>
       <For each={komorebi()!.allWorkspaces}>
-        {(
-          workspace: zebar.KomorebiOutput["allWorkspaces"][number],
-          idx: Accessor<number>
-        ) => (
+        {(workspace, idx: Accessor<number>) => (
           <button
             class={cn(
               "flex items-center justify-center rounded-full p-1 group",
