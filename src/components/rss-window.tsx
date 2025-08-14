@@ -51,25 +51,18 @@ function cleanupOldSeen(maxAgeDays: number = 30) {
   } catch {}
 }
 
-function loadRssOptions() {
+function loadRssOptions(wm: "glazewm" | "komorebi" | "vanilla") {
   // Try to load RSS options from the saved layout
   try {
-    const params = new URLSearchParams(window.location.search);
-    const savedLayouts = [
-      "zrp:layout:glazewm",
-      "zrp:layout:komorebi",
-      "zrp:layout:vanilla",
-    ];
+    const key = `zrp:layout:${wm}`;
 
-    for (const key of savedLayouts) {
-      const saved = localStorage.getItem(key);
-      if (saved) {
-        const layout = JSON.parse(saved);
-        for (const column of layout.columns || []) {
-          for (const component of column.components || []) {
-            if (component.type === "rss" && component.options) {
-              return component.options;
-            }
+    const saved = localStorage.getItem(key);
+    if (saved) {
+      const layout = JSON.parse(saved);
+      for (const column of layout.columns || []) {
+        for (const component of column.components || []) {
+          if (component.type === "rss" && component.options) {
+            return component.options;
           }
         }
       }
@@ -88,8 +81,10 @@ function loadRssOptions() {
   };
 }
 
-export default function RssWindow() {
-  const options = loadRssOptions();
+export default function RssWindow(props: {
+  wm: "glazewm" | "komorebi" | "vanilla";
+}) {
+  const options = loadRssOptions(props.wm);
   const [items, setItems] = createSignal<RssItem[]>([]);
   const [seen, setSeen] = createSignal<Set<string>>(loadSeen());
 
